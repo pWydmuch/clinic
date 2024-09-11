@@ -1,6 +1,7 @@
 package org.example.pretask.service;
 
 import org.example.pretask.model.Appointment;
+import org.example.pretask.model.AppointmentStatus;
 import org.example.pretask.model.Doctor;
 import org.example.pretask.model.Patient;
 import org.example.pretask.repo.AppointmentRepository;
@@ -29,6 +30,13 @@ public class AppointmentService {
         appointment.setDoctor(doctor);
         appointment.setPatient(patient);
         appointment.setDate(date);
+        appointment.setStatus(AppointmentStatus.SCHEDULED);
+        appointmentRepository.save(appointment);
+    }
+
+    public void cancelAppointment(Long id) {
+        Appointment appointment = appointmentRepository.findById(id).orElseThrow();
+        appointment.setStatus(AppointmentStatus.CANCELLED);
         appointmentRepository.save(appointment);
     }
 }

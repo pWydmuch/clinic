@@ -2,6 +2,8 @@ package org.example.pretask;
 
 import org.assertj.core.api.Assertions;
 import org.example.pretask.dto.AppointmentRequest;
+import org.example.pretask.model.Appointment;
+import org.example.pretask.model.AppointmentStatus;
 import org.example.pretask.repo.AppointmentRepository;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -52,6 +54,14 @@ public class PatientIT {
                 LocalTime.of(12, 0, 0)));
         webTestClient.post().uri("/appointments").bodyValue(request).exchange().expectStatus().isCreated();
         Assertions.assertThat(appointmentRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @Sql("/cancel-appointment.sql")
+    public void shouldCancelAppointment() {
+        webTestClient.put().uri("/appointments/1/cancellation").exchange().expectStatus().isOk();
+        Appointment appointment = appointmentRepository.findById(1L).orElseThrow();
+        Assertions.assertThat(appointment.getStatus()).isEqualTo(AppointmentStatus.CANCELLED);
     }
 
     @DynamicPropertySource

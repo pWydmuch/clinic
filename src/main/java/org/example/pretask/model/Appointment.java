@@ -15,6 +15,8 @@ public class Appointment {
     @ManyToOne
     private Doctor doctor;
     private LocalDateTime date;
+    @Enumerated(EnumType.STRING)
+    private AppointmentStatus status;
 
     public Long getId() {
         return id;
@@ -46,5 +48,13 @@ public class Appointment {
 
     public void setDate(LocalDateTime date) {
         this.date = date;
+    }
+
+    public AppointmentStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AppointmentStatus status) {
+        this.status = status;
     }
 }
