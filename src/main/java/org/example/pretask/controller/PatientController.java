@@ -22,7 +22,7 @@ public class PatientController {
 
     @PutMapping("/appointments/{id}/cancellation")
     public void cancelAppointment(@PathVariable Long id) {
-        appointmentService.cancelAppointment(id);
+        appointmentService.cancelAppointment(id,1L);
     }
 
 }

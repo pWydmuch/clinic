@@ -1,5 +1,6 @@
 package org.example.pretask.service;
 
+import org.example.pretask.exception.AppointmentAlreadyCancelledException;
 import org.example.pretask.model.Appointment;
 import org.example.pretask.model.AppointmentStatus;
 import org.example.pretask.model.Doctor;
@@ -10,6 +11,7 @@ import org.example.pretask.repo.PatientRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.NoSuchElementException;
 
 @Service
 public class AppointmentService {
@@ -34,8 +36,16 @@ public class AppointmentService {
         appointmentRepository.save(appointment);
     }
 
-    public void cancelAppointment(Long id) {
-        Appointment appointment = appointmentRepository.findById(id).orElseThrow();
+    public void cancelAppointment(Long id, Long patientId) {
+        Patient patient = patientRepository.findById(patientId).orElseThrow();
+        Appointment appointment = patient.getAppointments()
+                .stream()
+                .filter(x -> x.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("This user doesn't have an appointment with id: " + id));
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new AppointmentAlreadyCancelledException("Appointment with id: " + id + " has already been cancelled");
+        }
         appointment.setStatus(AppointmentStatus.CANCELLED);
         appointmentRepository.save(appointment);
     }
