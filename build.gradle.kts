@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-//    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.flywaydb:flyway-core")
     testImplementation("org.testcontainers:junit-jupiter")
@@ -29,10 +29,12 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-webflux")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-//    testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("org.mapstruct:mapstruct:1.6.0")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.0")
     runtimeOnly("org.flywaydb:flyway-database-postgresql:10.17.3")
+    implementation("org.springframework.boot:spring-boot-starter-validation:3.3.3")
 }
 
 tasks.withType<Test> {

@@ -1,7 +1,10 @@
 package org.example.pretask.controller;
 
+import jakarta.validation.Valid;
 import org.example.pretask.dto.AppointmentRequest;
+import org.example.pretask.dto.PatientRegistrationRequest;
 import org.example.pretask.service.AppointmentService;
+import org.example.pretask.service.PatientService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,9 +12,11 @@ import org.springframework.web.bind.annotation.*;
 public class PatientController {
 
     private final AppointmentService appointmentService;
+    private final PatientService patientService;
 
-    public PatientController(AppointmentService appointmentService) {
+    public PatientController(AppointmentService appointmentService, PatientService patientService) {
         this.appointmentService = appointmentService;
+        this.patientService = patientService;
     }
 
     @PostMapping("/appointments")
@@ -22,7 +27,13 @@ public class PatientController {
 
     @PutMapping("/appointments/{id}/cancellation")
     public void cancelAppointment(@PathVariable Long id) {
-        appointmentService.cancelAppointment(id,1L);
+        appointmentService.cancelAppointment(id, 1L);
+    }
+
+    @PostMapping("/registration")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void register(@RequestBody @Valid PatientRegistrationRequest registrationRequest) {
+        patientService.registerNewPatient(registrationRequest);
     }
 
 }

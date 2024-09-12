@@ -1,9 +1,11 @@
 package org.example.pretask;
 
 import org.example.pretask.dto.AppointmentRequest;
+import org.example.pretask.dto.PatientRegistrationRequest;
 import org.example.pretask.model.Appointment;
 import org.example.pretask.model.AppointmentStatus;
 import org.example.pretask.repo.AppointmentRepository;
+import org.example.pretask.repo.PatientRepository;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,9 @@ public class PatientIT {
     @Autowired
     private AppointmentRepository appointmentRepository;
 
+    @Autowired
+    private PatientRepository patientRepository;
+
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
             DockerImageName.parse("postgres:16-alpine")
     );
@@ -54,7 +59,12 @@ public class PatientIT {
         AppointmentRequest request = new AppointmentRequest(1L,
                 LocalDateTime.of(LocalDate.of(2022, 12, 12),
                         LocalTime.of(12, 0, 0)));
-        webTestClient.post().uri("/appointments").bodyValue(request).exchange().expectStatus().isCreated();
+        webTestClient.post()
+                .uri("/appointments")
+                .bodyValue(request)
+                .exchange()
+                .expectStatus()
+                .isCreated();
         assertThat(appointmentRepository.findAll()).hasSize(1);
     }
 
@@ -62,7 +72,11 @@ public class PatientIT {
     @Sql("/cancel-appointment.sql")
     @Sql(scripts = "/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void shouldCancelAppointmentWhenAppointmentOfGivenPatient() {
-        webTestClient.put().uri("/appointments/1/cancellation").exchange().expectStatus().isOk();
+        webTestClient.put()
+                .uri("/appointments/1/cancellation")
+                .exchange()
+                .expectStatus()
+                .isOk();
         Appointment appointment = appointmentRepository.findById(1L).orElseThrow();
         assertThat(appointment.getStatus()).isEqualTo(AppointmentStatus.CANCELLED);
     }
@@ -71,7 +85,11 @@ public class PatientIT {
     @Sql("/cancel-appointment.sql")
     @Sql(scripts = "/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void shouldNotCancelAppointmentWhenAppointmentNotOfGivenPatient() {
-        webTestClient.put().uri("/appointments/2/cancellation").exchange().expectStatus().isBadRequest();
+        webTestClient.put()
+                .uri("/appointments/2/cancellation")
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
         Appointment appointment = appointmentRepository.findById(2L).orElseThrow();
         assertThat(appointment.getStatus()).isEqualTo(AppointmentStatus.SCHEDULED);
     }
@@ -80,7 +98,75 @@ public class PatientIT {
     @Sql("/cancel-appointment.sql")
     @Sql(scripts = "/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void shouldReturnBadRequestWhenAppointmentAlreadyCancelled() {
-        webTestClient.put().uri("/appointments/3/cancellation").exchange().expectStatus().isBadRequest();
+        webTestClient.put()
+                .uri("/appointments/3/cancellation")
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody().json("""
+                        {"message":"Appointment with id: 3 has already been cancelled"}
+                        """);
+    }
+
+    @Test
+    public void shouldRegisterPatient() {
+        PatientRegistrationRequest request = new PatientRegistrationRequest("Jan", "Nowak", 24,
+                99999999999L, "jan-nowak", "12345678");
+        webTestClient.post()
+                .uri("/registration")
+                .bodyValue(request)
+                .exchange()
+                .expectStatus()
+                .isCreated();
+        assertThat(patientRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @Sql("/user-already-exists.sql")
+    @Sql(scripts = "/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void shouldNotRegisterPatientWhenLoginAlreadyTaken() {
+        PatientRegistrationRequest request = new PatientRegistrationRequest("Jan", "Nowak", 24,
+                99999999999L, "login", "12345678");
+        webTestClient.post()
+                .uri("/registration")
+                .bodyValue(request)
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody().json("""
+                        {"message": "Login already taken"}
+                        """);
+    }
+
+    @Test
+    @Sql("/user-already-exists.sql")
+    @Sql(scripts = "/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void shouldNotRegisterPatientWhenUserWithThisPeselAlreadyExist() {
+        PatientRegistrationRequest request = new PatientRegistrationRequest("Jan", "Nowak", 24,
+                88888888888L, "another-login", "12345678");
+        webTestClient.post()
+                .uri("/registration")
+                .bodyValue(request)
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody().json("""
+                        {"message":"User with pesel: 88888888888 already exists"}
+                        """);
+    }
+
+    @Test
+    public void shouldNotRegisterPatientWhenAgeLowerThan18() {
+        PatientRegistrationRequest request = new PatientRegistrationRequest("Jan", "Nowak", 17,
+                99999999999L, "jan-nowak", "12345678");
+        webTestClient.post()
+                .uri("/registration")
+                .bodyValue(request)
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody().json("""
+                        {"message":"age must be greater than or equal to 18"}""");
     }
 
     @DynamicPropertySource

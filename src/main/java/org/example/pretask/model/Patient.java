@@ -13,9 +13,13 @@ public class Patient {
     private String name;
     private String surname;
     private Integer age;
+    @Column(unique = true)
     private Long pesel;
     @OneToMany(mappedBy = "patient")
     private Set<Appointment> appointments;
+    @Column(unique = true)
+    private String login;
+    private String password;
 
     public Long getId() {
         return id;
@@ -63,5 +67,21 @@ public class Patient {
 
     public void setAppointments(Set<Appointment> appointments) {
         this.appointments = appointments;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
