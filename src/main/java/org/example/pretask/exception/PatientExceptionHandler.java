@@ -3,7 +3,7 @@ package org.example.pretask.exception;
 import jakarta.validation.ConstraintViolation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.ObjectError;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,7 +15,8 @@ public class PatientExceptionHandler {
 
     @ExceptionHandler({AppointmentAlreadyCancelledException.class,
             NoSuchElementException.class,
-            UserAlreadyExistException.class})
+            UserAlreadyExistException.class,
+            AuthenticationException.class})
     public ResponseEntity<?> handleBadRequests(Exception e) {
         return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
     }

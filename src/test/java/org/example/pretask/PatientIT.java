@@ -1,14 +1,14 @@
 package org.example.pretask;
 
 import org.example.pretask.dto.AppointmentRequest;
+import org.example.pretask.dto.LoginRequest;
+import org.example.pretask.dto.LoginResponse;
 import org.example.pretask.dto.PatientRegistrationRequest;
 import org.example.pretask.model.Appointment;
 import org.example.pretask.model.AppointmentStatus;
 import org.example.pretask.repo.AppointmentRepository;
 import org.example.pretask.repo.PatientRepository;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -52,62 +52,84 @@ public class PatientIT {
         postgres.stop();
     }
 
-    @Test
-    @Sql("/create-appointment.sql")
-    @Sql(scripts = "/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    public void shouldCreateAppointment() {
-        AppointmentRequest request = new AppointmentRequest(1L,
-                LocalDateTime.of(LocalDate.of(2022, 12, 12),
-                        LocalTime.of(12, 0, 0)));
-        webTestClient.post()
-                .uri("/appointments")
-                .bodyValue(request)
-                .exchange()
-                .expectStatus()
-                .isCreated();
-        assertThat(appointmentRepository.findAll()).hasSize(1);
+    @Nested
+    public class AuthenticatedCases {
+
+        private String token;
+
+        @BeforeEach
+        public void authenticate() {
+            LoginRequest loginRequest = new LoginRequest("login", "123456789");
+            LoginResponse loginResponse = webTestClient.post()
+                    .uri("/login")
+                    .bodyValue(loginRequest)
+                    .exchange().returnResult(LoginResponse.class).getResponseBody().blockFirst();
+            token = "Bearer " + loginResponse.token();
+        }
+
+        @Test
+        @Sql("/clear-db.sql")
+        @Sql("/create-appointment.sql")
+        public void shouldCreateAppointment() {
+            AppointmentRequest request = new AppointmentRequest(1L,
+                    LocalDateTime.of(LocalDate.of(2022, 12, 12),
+                            LocalTime.of(12, 0, 0)));
+            Long id = webTestClient.post()
+                    .uri("/appointments")
+                    .header("Authorization", token)
+                    .bodyValue(request)
+                    .exchange()
+                    .expectStatus()
+                    .isCreated().returnResult(Long.class).getResponseBody().blockFirst();
+            assertThat(appointmentRepository.findAll()).hasSize(1);
+            assertThat(id).isEqualTo(1L);
+        }
+
+        @Test
+        @Sql("/clear-db.sql")
+        @Sql("/test-data.sql")
+        public void shouldCancelAppointmentWhenAppointmentOfGivenPatient() {
+            webTestClient.put()
+                    .uri("/appointments/1/cancellation")
+                    .header("Authorization", token)
+                    .exchange()
+                    .expectStatus()
+                    .isOk();
+            Appointment appointment = appointmentRepository.findById(1L).orElseThrow();
+            assertThat(appointment.getStatus()).isEqualTo(AppointmentStatus.CANCELLED);
+        }
+
+        @Test
+        @Sql("/clear-db.sql")
+        @Sql("/test-data.sql")
+        public void shouldNotCancelAppointmentWhenAppointmentNotOfGivenPatient() {
+            webTestClient.put()
+                    .uri("/appointments/2/cancellation")
+                    .header("Authorization", token)
+                    .exchange()
+                    .expectStatus()
+                    .isBadRequest();
+            Appointment appointment = appointmentRepository.findById(2L).orElseThrow();
+            assertThat(appointment.getStatus()).isEqualTo(AppointmentStatus.SCHEDULED);
+        }
+
+        @Test
+        @Sql("/clear-db.sql")
+        @Sql("/test-data.sql")
+        public void shouldReturnBadRequestWhenAppointmentAlreadyCancelled() {
+            webTestClient.put()
+                    .uri("/appointments/3/cancellation")
+                    .header("Authorization", token)
+                    .exchange()
+                    .expectStatus()
+                    .isBadRequest()
+                    .expectBody().json("""
+                            {"message":"Appointment with id: 3 has already been cancelled"}
+                            """);
+        }
     }
 
-    @Test
-    @Sql("/cancel-appointment.sql")
-    @Sql(scripts = "/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    public void shouldCancelAppointmentWhenAppointmentOfGivenPatient() {
-        webTestClient.put()
-                .uri("/appointments/1/cancellation")
-                .exchange()
-                .expectStatus()
-                .isOk();
-        Appointment appointment = appointmentRepository.findById(1L).orElseThrow();
-        assertThat(appointment.getStatus()).isEqualTo(AppointmentStatus.CANCELLED);
-    }
-
-    @Test
-    @Sql("/cancel-appointment.sql")
-    @Sql(scripts = "/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    public void shouldNotCancelAppointmentWhenAppointmentNotOfGivenPatient() {
-        webTestClient.put()
-                .uri("/appointments/2/cancellation")
-                .exchange()
-                .expectStatus()
-                .isBadRequest();
-        Appointment appointment = appointmentRepository.findById(2L).orElseThrow();
-        assertThat(appointment.getStatus()).isEqualTo(AppointmentStatus.SCHEDULED);
-    }
-
-    @Test
-    @Sql("/cancel-appointment.sql")
-    @Sql(scripts = "/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    public void shouldReturnBadRequestWhenAppointmentAlreadyCancelled() {
-        webTestClient.put()
-                .uri("/appointments/3/cancellation")
-                .exchange()
-                .expectStatus()
-                .isBadRequest()
-                .expectBody().json("""
-                        {"message":"Appointment with id: 3 has already been cancelled"}
-                        """);
-    }
-
+    @Sql("/clear-db.sql")
     @Test
     public void shouldRegisterPatient() {
         PatientRegistrationRequest request = new PatientRegistrationRequest("Jan", "Nowak", 24,
@@ -122,8 +144,8 @@ public class PatientIT {
     }
 
     @Test
-    @Sql("/user-already-exists.sql")
-    @Sql(scripts = "/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @Sql("/clear-db.sql")
+    @Sql("/test-data.sql")
     public void shouldNotRegisterPatientWhenLoginAlreadyTaken() {
         PatientRegistrationRequest request = new PatientRegistrationRequest("Jan", "Nowak", 24,
                 99999999999L, "login", "12345678");
@@ -139,8 +161,8 @@ public class PatientIT {
     }
 
     @Test
-    @Sql("/user-already-exists.sql")
-    @Sql(scripts = "/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @Sql("/clear-db.sql")
+    @Sql("/test-data.sql")
     public void shouldNotRegisterPatientWhenUserWithThisPeselAlreadyExist() {
         PatientRegistrationRequest request = new PatientRegistrationRequest("Jan", "Nowak", 24,
                 88888888888L, "another-login", "12345678");
@@ -156,6 +178,8 @@ public class PatientIT {
     }
 
     @Test
+    @Sql("/clear-db.sql")
+    @Sql("/test-data.sql")
     public void shouldNotRegisterPatientWhenAgeLowerThan18() {
         PatientRegistrationRequest request = new PatientRegistrationRequest("Jan", "Nowak", 17,
                 99999999999L, "jan-nowak", "12345678");
@@ -169,10 +193,38 @@ public class PatientIT {
                         {"message":"age must be greater than or equal to 18"}""");
     }
 
+    @Test
+    @Sql("/clear-db.sql")
+    @Sql("/test-data.sql")
+    public void shouldLoginPatientWhenUserExists() {
+        LoginRequest loginRequest = new LoginRequest("login", "123456789");
+        webTestClient.post()
+                .uri("/login")
+                .bodyValue(loginRequest)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody().jsonPath("$.token").isNotEmpty();
+    }
+
+    @Test
+    @Sql("/clear-db.sql")
+    @Sql("/test-data.sql")
+    public void shouldNotLoginPatientWhenUserNotExists() {
+        LoginRequest loginRequest = new LoginRequest("no_user_login", "123456789");
+        webTestClient.post()
+                .uri("/login")
+                .bodyValue(loginRequest)
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+    }
+
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("jwt.secret", () -> "9a4f2c8d3b7a1e6f45c8a0b3f267d8b1d4e6f3c8a9d2b5f8e3a9c8b5f6v8a3d9");
     }
 }

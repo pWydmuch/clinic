@@ -35,6 +35,7 @@ dependencies {
     annotationProcessor("org.mapstruct:mapstruct-processor:1.6.0")
     runtimeOnly("org.flywaydb:flyway-database-postgresql:10.17.3")
     implementation("org.springframework.boot:spring-boot-starter-validation:3.3.3")
+    implementation("io.jsonwebtoken:jjwt:0.12.6")
 }
 
 tasks.withType<Test> {
