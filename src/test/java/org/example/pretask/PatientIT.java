@@ -8,16 +8,11 @@ import org.example.pretask.model.Appointment;
 import org.example.pretask.model.AppointmentStatus;
 import org.example.pretask.repo.AppointmentRepository;
 import org.example.pretask.repo.PatientRepository;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.web.reactive.server.WebTestClient;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,12 +20,7 @@ import java.time.LocalTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureWebTestClient
-public class PatientIT {
-
-    @Autowired
-    private WebTestClient webTestClient;
+public class PatientIT extends BaseIT {
 
     @Autowired
     private AppointmentRepository appointmentRepository;
@@ -38,19 +28,7 @@ public class PatientIT {
     @Autowired
     private PatientRepository patientRepository;
 
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
-            DockerImageName.parse("postgres:16-alpine")
-    );
-
-    @BeforeAll
-    static void beforeAll() {
-        postgres.start();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        postgres.stop();
-    }
+    private static final String PATIENTS_PREFIX = "/patients";
 
     @Nested
     public class AuthenticatedCases {
@@ -75,7 +53,7 @@ public class PatientIT {
                     LocalDateTime.of(LocalDate.of(2022, 12, 12),
                             LocalTime.of(12, 0, 0)));
             Long id = webTestClient.post()
-                    .uri("/appointments")
+                    .uri(PATIENTS_PREFIX + "/appointments")
                     .header("Authorization", token)
                     .bodyValue(request)
                     .exchange()
@@ -90,7 +68,7 @@ public class PatientIT {
         @Sql("/test-data.sql")
         public void shouldCancelAppointmentWhenAppointmentOfGivenPatient() {
             webTestClient.put()
-                    .uri("/appointments/1/cancellation")
+                    .uri(PATIENTS_PREFIX + "/appointments/1/cancellation")
                     .header("Authorization", token)
                     .exchange()
                     .expectStatus()
@@ -104,7 +82,7 @@ public class PatientIT {
         @Sql("/test-data.sql")
         public void shouldNotCancelAppointmentWhenAppointmentNotOfGivenPatient() {
             webTestClient.put()
-                    .uri("/appointments/2/cancellation")
+                    .uri(PATIENTS_PREFIX + "/appointments/2/cancellation")
                     .header("Authorization", token)
                     .exchange()
                     .expectStatus()
@@ -118,7 +96,7 @@ public class PatientIT {
         @Sql("/test-data.sql")
         public void shouldReturnBadRequestWhenAppointmentAlreadyCancelled() {
             webTestClient.put()
-                    .uri("/appointments/3/cancellation")
+                    .uri(PATIENTS_PREFIX + "/appointments/3/cancellation")
                     .header("Authorization", token)
                     .exchange()
                     .expectStatus()
@@ -135,7 +113,7 @@ public class PatientIT {
         PatientRegistrationRequest request = new PatientRegistrationRequest("Jan", "Nowak", 24,
                 99999999999L, "jan-nowak", "12345678");
         webTestClient.post()
-                .uri("/registration")
+                .uri(PATIENTS_PREFIX + "/registration")
                 .bodyValue(request)
                 .exchange()
                 .expectStatus()
@@ -150,7 +128,7 @@ public class PatientIT {
         PatientRegistrationRequest request = new PatientRegistrationRequest("Jan", "Nowak", 24,
                 99999999999L, "login", "12345678");
         webTestClient.post()
-                .uri("/registration")
+                .uri(PATIENTS_PREFIX + "/registration")
                 .bodyValue(request)
                 .exchange()
                 .expectStatus()
@@ -167,7 +145,7 @@ public class PatientIT {
         PatientRegistrationRequest request = new PatientRegistrationRequest("Jan", "Nowak", 24,
                 88888888888L, "another-login", "12345678");
         webTestClient.post()
-                .uri("/registration")
+                .uri(PATIENTS_PREFIX + "/registration")
                 .bodyValue(request)
                 .exchange()
                 .expectStatus()
@@ -184,7 +162,7 @@ public class PatientIT {
         PatientRegistrationRequest request = new PatientRegistrationRequest("Jan", "Nowak", 17,
                 99999999999L, "jan-nowak", "12345678");
         webTestClient.post()
-                .uri("/registration")
+                .uri(PATIENTS_PREFIX + "/registration")
                 .bodyValue(request)
                 .exchange()
                 .expectStatus()
@@ -193,38 +171,4 @@ public class PatientIT {
                         {"message":"age must be greater than or equal to 18"}""");
     }
 
-    @Test
-    @Sql("/clear-db.sql")
-    @Sql("/test-data.sql")
-    public void shouldLoginPatientWhenUserExists() {
-        LoginRequest loginRequest = new LoginRequest("login", "123456789");
-        webTestClient.post()
-                .uri("/login")
-                .bodyValue(loginRequest)
-                .exchange()
-                .expectStatus()
-                .isOk()
-                .expectBody().jsonPath("$.token").isNotEmpty();
-    }
-
-    @Test
-    @Sql("/clear-db.sql")
-    @Sql("/test-data.sql")
-    public void shouldNotLoginPatientWhenUserNotExists() {
-        LoginRequest loginRequest = new LoginRequest("no_user_login", "123456789");
-        webTestClient.post()
-                .uri("/login")
-                .bodyValue(loginRequest)
-                .exchange()
-                .expectStatus()
-                .isBadRequest();
-    }
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("jwt.secret", () -> "9a4f2c8d3b7a1e6f45c8a0b3f267d8b1d4e6f3c8a9d2b5f8e3a9c8b5f6v8a3d9");
-    }
 }

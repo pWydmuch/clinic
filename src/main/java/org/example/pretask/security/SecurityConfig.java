@@ -26,7 +26,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests(authRequests -> authRequests
-                        .requestMatchers("/login", "/registration").permitAll()
+                        .requestMatchers("/login", "*/registration").permitAll()
                         .anyRequest().authenticated())
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(e -> e.accessDeniedHandler((req, res, ex) -> res.setStatus(403))

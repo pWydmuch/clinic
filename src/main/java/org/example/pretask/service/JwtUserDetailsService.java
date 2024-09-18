@@ -1,7 +1,7 @@
 package org.example.pretask.service;
 
-import org.example.pretask.model.Patient;
-import org.example.pretask.repo.PatientRepository;
+import org.example.pretask.model.ClinicUser;
+import org.example.pretask.repo.ClinicUserRepository;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,31 +16,31 @@ import java.util.ArrayList;
 @Service
 public class JwtUserDetailsService implements UserDetailsService {
 
-    private final PatientRepository patientRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenService jwtTokenService;
+    private final ClinicUserRepository<ClinicUser> clinicUserRepository;
 
-    public JwtUserDetailsService(PatientRepository patientRepository, @Lazy AuthenticationManager authenticationManager, JwtTokenService jwtTokenService) {
-        this.patientRepository = patientRepository;
+    public JwtUserDetailsService(@Lazy AuthenticationManager authenticationManager, JwtTokenService jwtTokenService, ClinicUserRepository clinicUserRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenService = jwtTokenService;
+        this.clinicUserRepository = clinicUserRepository;
     }
 
     public String authenticate(String login, String password) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(login, password));
         UserDetails userDetails = loadUserByUsername(login);
-        Patient patient = getPatient(login);
+        ClinicUser patient = getClinicUser(login);
         return jwtTokenService.generateToken(userDetails, patient.getId());
     }
 
     @Override
     public UserDetails loadUserByUsername(String login) {
-        Patient patient = getPatient(login);
-        return new User(patient.getLogin(), patient.getPassword(), new ArrayList<>());
+        ClinicUser clinicUser = getClinicUser(login);
+        return new User(clinicUser.getLogin(), clinicUser.getPassword(), new ArrayList<>());
     }
 
-    private Patient getPatient(String login) {
-        return patientRepository.findByLogin(login)
+    private ClinicUser getClinicUser(String login) {
+        return clinicUserRepository.findByLogin(login)
                 .orElseThrow(() -> new UsernameNotFoundException("User with login: " + login + " not found"));
     }
 

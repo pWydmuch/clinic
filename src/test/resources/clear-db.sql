@@ -1,3 +1,2 @@
 DELETE FROM appointments;
-DELETE FROM doctors;
-DELETE FROM patients;
+DELETE FROM users;

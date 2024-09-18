@@ -11,7 +11,6 @@ import org.example.pretask.repo.PatientRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -25,7 +24,6 @@ public class AppointmentService {
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
     }
-
 
     public Long createAppointment(Long doctorId, Long patientId, LocalDateTime date) {
         Appointment appointment = new Appointment();
