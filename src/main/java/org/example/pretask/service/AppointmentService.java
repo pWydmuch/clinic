@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 @Service
 public class AppointmentService {
@@ -36,9 +37,18 @@ public class AppointmentService {
         return appointmentRepository.saveAndFlush(appointment).getId();
     }
 
-    public void cancelAppointment(Long id, Long patientId) {
+    public void cancelPatientAppointment(Long id, Long patientId) {
         Patient patient = patientRepository.findById(patientId).orElseThrow();
-        Appointment appointment = patient.getAppointments()
+        cancelAppointment(patient.getAppointments(), id);
+    }
+
+    public void cancelDoctorAppointment(Long id, Long doctorId) {
+        Doctor doctor = doctorRepository.findById(doctorId).orElseThrow();
+        cancelAppointment(doctor.getAppointments(), id);
+    }
+
+    private void cancelAppointment(Set<Appointment> appointments, Long id) {
+        Appointment appointment = appointments
                 .stream()
                 .filter(x -> x.getId().equals(id))
                 .findFirst()
@@ -49,4 +59,5 @@ public class AppointmentService {
         appointment.setStatus(AppointmentStatus.CANCELLED);
         appointmentRepository.save(appointment);
     }
+
 }

@@ -23,9 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class PatientIT extends BaseIT {
 
     @Autowired
-    private AppointmentRepository appointmentRepository;
-
-    @Autowired
     private PatientRepository patientRepository;
 
     private static final String PATIENTS_PREFIX = "/patients";

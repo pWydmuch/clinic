@@ -1,6 +1,7 @@
 package org.example.pretask;
 
 import org.example.pretask.dto.LoginRequest;
+import org.example.pretask.repo.AppointmentRepository;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,9 @@ public class BaseIT {
 
     @Autowired
     protected WebTestClient webTestClient;
+
+    @Autowired
+    protected AppointmentRepository appointmentRepository;
 
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
             DockerImageName.parse("postgres:16-alpine")

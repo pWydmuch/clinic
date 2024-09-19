@@ -36,7 +36,7 @@ public class PatientController {
     @PutMapping("/appointments/{appointmentId}/cancellation")
     public void cancelAppointment(@PathVariable Long appointmentId, @RequestHeader("Authorization") String authorizationHeader) {
         Long patientId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
-        appointmentService.cancelAppointment(appointmentId, patientId);
+        appointmentService.cancelPatientAppointment(appointmentId, patientId);
     }
 
     @PostMapping("/registration")
