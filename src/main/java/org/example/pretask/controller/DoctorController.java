@@ -2,11 +2,14 @@ package org.example.pretask.controller;
 
 import jakarta.validation.Valid;
 import org.example.pretask.dto.DoctorRegistrationRequest;
+import org.example.pretask.dto.PatientDto;
 import org.example.pretask.service.AppointmentService;
 import org.example.pretask.service.DoctorService;
 import org.example.pretask.service.JwtTokenService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Set;
 
 @RestController
 @RequestMapping("/doctors")
@@ -32,5 +35,11 @@ public class DoctorController {
     public void cancelAppointment(@PathVariable Long appointmentId, @RequestHeader("Authorization") String authorizationHeader) {
         Long doctorId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
         appointmentService.cancelDoctorAppointment(appointmentId, doctorId);
+    }
+
+    @GetMapping("/patients")
+    public Set<PatientDto> getPatientsWithAppointmentsWithDoctor(@RequestHeader("Authorization") String authorizationHeader) {
+        Long doctorId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
+        return appointmentService.getPatientsOfDoctor(doctorId);
     }
 }

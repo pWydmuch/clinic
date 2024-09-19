@@ -12,4 +12,4 @@ INSERT INTO appointments(id, patient_id, doctor_id, date, status)
 VALUES (1, 2, 1, '2016-03-16 13:56:39.492000', 'SCHEDULED'),
        (2, 3, 1, '2016-03-17 13:56:39.492000', 'SCHEDULED'),
        (3, 2, 1, '2016-03-18 13:56:39.492000', 'CANCELLED'),
-       (4, 1, 4, '2016-03-19 13:56:39.492000', 'SCHEDULED');
+       (4, 2, 4, '2016-03-19 13:56:39.492000', 'SCHEDULED');

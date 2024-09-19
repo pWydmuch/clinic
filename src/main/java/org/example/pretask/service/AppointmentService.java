@@ -1,6 +1,8 @@
 package org.example.pretask.service;
 
+import org.example.pretask.dto.PatientDto;
 import org.example.pretask.exception.AppointmentAlreadyCancelledException;
+import org.example.pretask.mapper.PatientDtoMapper;
 import org.example.pretask.model.Appointment;
 import org.example.pretask.model.AppointmentStatus;
 import org.example.pretask.model.Doctor;
@@ -13,17 +15,20 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
+    private final PatientDtoMapper patientDtoMapper;
 
-    public AppointmentService(AppointmentRepository appointmentRepository, DoctorRepository doctorRepository, PatientRepository patientRepository) {
+    public AppointmentService(AppointmentRepository appointmentRepository, DoctorRepository doctorRepository, PatientRepository patientRepository, PatientDtoMapper patientDtoMapper) {
         this.appointmentRepository = appointmentRepository;
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
+        this.patientDtoMapper = patientDtoMapper;
     }
 
     public Long createAppointment(Long doctorId, Long patientId, LocalDateTime date) {
@@ -34,7 +39,7 @@ public class AppointmentService {
         appointment.setPatient(patient);
         appointment.setDate(date);
         appointment.setStatus(AppointmentStatus.SCHEDULED);
-        return appointmentRepository.saveAndFlush(appointment).getId();
+        return appointmentRepository.save(appointment).getId();
     }
 
     public void cancelPatientAppointment(Long id, Long patientId) {
@@ -60,4 +65,12 @@ public class AppointmentService {
         appointmentRepository.save(appointment);
     }
 
+    public Set<PatientDto> getPatientsOfDoctor(Long doctorId) {
+        Doctor doctor = doctorRepository.findById(doctorId).orElseThrow();
+        return doctor.getAppointments()
+                .stream()
+                .map(Appointment::getPatient)
+                .map(patientDtoMapper::entityToDto)
+                .collect(Collectors.toSet());
+    }
 }

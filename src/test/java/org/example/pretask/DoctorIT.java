@@ -78,12 +78,28 @@ public class DoctorIT extends BaseIT {
                             {"message":"Appointment with id: 3 has already been cancelled"}
                             """);
         }
+
+        @Test
+        @Sql("/clear-db.sql")
+        @Sql("/test-data.sql")
+        public void shouldReturnListOfPatientsOfGivenDoctor() {
+            webTestClient.get()
+                    .uri(DOCTORS_PREFIX + "/patients")
+                    .header("Authorization", token)
+                    .exchange()
+                    .expectStatus()
+                    .isOk()
+                    .expectBody().json("""
+                            [{"name":"Jan","surname":"Nowak","pesel":88888888888,"age":23},{"name":"Michal","surname":"Nowak","pesel":77777777777,"age":43}]
+                            """);
+        }
     }
+
     @Sql("/clear-db.sql")
     @Test
     public void shouldRegisterDoctor() {
         DoctorRegistrationRequest request = new DoctorRegistrationRequest("Jan", "Nowak", 24,
-                99999999999L,"cardiologist" ,"jan-nowak", "12345678");
+                99999999999L, "cardiologist", "jan-nowak", "12345678");
         webTestClient.post()
                 .uri(DOCTORS_PREFIX + "/registration")
                 .bodyValue(request)
@@ -98,7 +114,7 @@ public class DoctorIT extends BaseIT {
     @Sql("/test-data.sql")
     public void shouldNotRegisterDoctorWhenLoginAlreadyTaken() {
         DoctorRegistrationRequest request = new DoctorRegistrationRequest("Jan", "Nowak", 24,
-                99999999999L,"cardiologist" ,"login", "12345678");
+                99999999999L, "cardiologist", "login", "12345678");
         webTestClient.post()
                 .uri(DOCTORS_PREFIX + "/registration")
                 .bodyValue(request)
@@ -115,7 +131,7 @@ public class DoctorIT extends BaseIT {
     @Sql("/test-data.sql")
     public void shouldNotRegisterDoctorWhenUserWithThisPeselAlreadyExist() {
         DoctorRegistrationRequest request = new DoctorRegistrationRequest("Jan", "Nowak", 24,
-                88888888888L, "psychitirst" ,"another-login", "12345678");
+                88888888888L, "psychitirst", "another-login", "12345678");
         webTestClient.post()
                 .uri(DOCTORS_PREFIX + "/registration")
                 .bodyValue(request)
@@ -132,7 +148,7 @@ public class DoctorIT extends BaseIT {
     @Sql("/test-data.sql")
     public void shouldNotRegisterDoctorWhenAgeLowerThan18() {
         DoctorRegistrationRequest request = new DoctorRegistrationRequest("Jan", "Nowak", 17,
-                99999999999L,"cardiologist", "jan-nowak", "12345678");
+                99999999999L, "cardiologist", "jan-nowak", "12345678");
         webTestClient.post()
                 .uri(DOCTORS_PREFIX + "/registration")
                 .bodyValue(request)
