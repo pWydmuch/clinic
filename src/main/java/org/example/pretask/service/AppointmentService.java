@@ -1,7 +1,9 @@
 package org.example.pretask.service;
 
+import org.example.pretask.dto.AppointmentDto;
 import org.example.pretask.dto.PatientDto;
 import org.example.pretask.exception.AppointmentAlreadyCancelledException;
+import org.example.pretask.mapper.AppointmentDtoMapper;
 import org.example.pretask.mapper.PatientDtoMapper;
 import org.example.pretask.model.Appointment;
 import org.example.pretask.model.AppointmentStatus;
@@ -23,12 +25,14 @@ public class AppointmentService {
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
     private final PatientDtoMapper patientDtoMapper;
+    private final AppointmentDtoMapper appointmentDtoMapper;
 
-    public AppointmentService(AppointmentRepository appointmentRepository, DoctorRepository doctorRepository, PatientRepository patientRepository, PatientDtoMapper patientDtoMapper) {
+    public AppointmentService(AppointmentRepository appointmentRepository, DoctorRepository doctorRepository, PatientRepository patientRepository, PatientDtoMapper patientDtoMapper, AppointmentDtoMapper appointmentDtoMapper) {
         this.appointmentRepository = appointmentRepository;
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.patientDtoMapper = patientDtoMapper;
+        this.appointmentDtoMapper = appointmentDtoMapper;
     }
 
     public Long createAppointment(Long doctorId, Long patientId, LocalDateTime date) {
@@ -71,6 +75,16 @@ public class AppointmentService {
                 .stream()
                 .map(Appointment::getPatient)
                 .map(patientDtoMapper::entityToDto)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<AppointmentDto> getAppointmentsOfPatientsOfDoctor(Long doctorId, Long patientId) {
+        return doctorRepository.findById(doctorId)
+                .orElseThrow()
+                .getAppointments()
+                .stream()
+                .filter(a -> a.getPatient().getId().equals(patientId))
+                .map(appointmentDtoMapper::toDto)
                 .collect(Collectors.toSet());
     }
 }

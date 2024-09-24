@@ -20,7 +20,7 @@ public class JwtUserDetailsService implements UserDetailsService {
     private final JwtTokenService jwtTokenService;
     private final ClinicUserRepository<ClinicUser> clinicUserRepository;
 
-    public JwtUserDetailsService(@Lazy AuthenticationManager authenticationManager, JwtTokenService jwtTokenService, ClinicUserRepository clinicUserRepository) {
+    public JwtUserDetailsService(@Lazy AuthenticationManager authenticationManager, JwtTokenService jwtTokenService, ClinicUserRepository<ClinicUser> clinicUserRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenService = jwtTokenService;
         this.clinicUserRepository = clinicUserRepository;

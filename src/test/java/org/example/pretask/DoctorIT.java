@@ -93,6 +93,21 @@ public class DoctorIT extends BaseIT {
                             [{"name":"Jan","surname":"Nowak","pesel":88888888888,"age":23},{"name":"Michal","surname":"Nowak","pesel":77777777777,"age":43}]
                             """);
         }
+
+        @Test
+        @Sql("/clear-db.sql")
+        @Sql("/test-data.sql")
+        public void shouldReturnListOfAppointmentsOfPatientsOfGivenDoctor() {
+            webTestClient.get()
+                    .uri(DOCTORS_PREFIX + "/patients/2/appointments")
+                    .header("Authorization", token)
+                    .exchange()
+                    .expectStatus()
+                    .isOk()
+                    .expectBody().json("""
+                         [{"patient":{"name":"Jan","surname":"Nowak","pesel":88888888888,"age":23},"date":"2016-03-18T13:56:39.492","status":"CANCELLED"},{"patient":{"name":"Jan","surname":"Nowak","pesel":88888888888,"age":23},"date":"2016-03-16T13:56:39.492","status":"SCHEDULED"}]
+                         """);
+        }
     }
 
     @Sql("/clear-db.sql")
