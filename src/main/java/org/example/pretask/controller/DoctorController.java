@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.example.pretask.dto.AppointmentDto;
 import org.example.pretask.dto.DoctorRegistrationRequest;
 import org.example.pretask.dto.PatientDto;
-import org.example.pretask.model.Appointment;
 import org.example.pretask.service.AppointmentService;
 import org.example.pretask.service.DoctorService;
 import org.example.pretask.service.JwtTokenService;
