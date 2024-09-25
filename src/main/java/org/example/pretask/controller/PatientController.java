@@ -8,6 +8,7 @@ import org.example.pretask.service.AppointmentService;
 import org.example.pretask.service.JwtTokenService;
 import org.example.pretask.service.PatientService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,22 +21,23 @@ public class PatientController {
     private final JwtTokenService jwtTokenService;
 
     @PostMapping("/appointments")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Long addAppointment(@RequestBody AppointmentRequest request, @RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<Long> addAppointment(@RequestBody AppointmentRequest request, @RequestHeader("Authorization") String authorizationHeader) {
         Long patientId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
-        return appointmentService.createAppointment(request.doctorId(), patientId, request.date());
+        Long appointmentId = appointmentService.createAppointment(request.doctorId(), patientId, request.date());
+        return new ResponseEntity<>(appointmentId, HttpStatus.CREATED);
     }
 
     @PutMapping("/appointments/{appointmentId}/cancellation")
-    public void cancelAppointment(@PathVariable Long appointmentId, @RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<Void> cancelAppointment(@PathVariable Long appointmentId, @RequestHeader("Authorization") String authorizationHeader) {
         Long patientId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
         appointmentService.cancelPatientAppointment(appointmentId, patientId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/registration")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void register(@RequestBody @Valid PatientRegistrationRequest registrationRequest) {
+    public ResponseEntity<Void> register(@RequestBody @Valid PatientRegistrationRequest registrationRequest) {
         patientService.registerNewPatient(registrationRequest);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
 }

@@ -9,6 +9,7 @@ import org.example.pretask.service.AppointmentService;
 import org.example.pretask.service.DoctorService;
 import org.example.pretask.service.JwtTokenService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
@@ -23,26 +24,27 @@ public class DoctorController {
     private final JwtTokenService jwtTokenService;
 
     @PostMapping("/registration")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void register(@RequestBody @Valid DoctorRegistrationRequest registrationRequest) {
+    public ResponseEntity<Void> register(@RequestBody @Valid DoctorRegistrationRequest registrationRequest) {
         doctorService.registerNewDoctor(registrationRequest);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @PutMapping("/appointments/{appointmentId}/cancellation")
-    public void cancelAppointment(@PathVariable Long appointmentId, @RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<Void> cancelAppointment(@PathVariable Long appointmentId, @RequestHeader("Authorization") String authorizationHeader) {
         Long doctorId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
         appointmentService.cancelDoctorAppointment(appointmentId, doctorId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/patients")
-    public Set<PatientDto> getPatientsWithAppointmentsWithDoctor(@RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<Set<PatientDto>> getPatientsWithAppointmentsWithDoctor(@RequestHeader("Authorization") String authorizationHeader) {
         Long doctorId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
-        return appointmentService.getPatientsOfDoctor(doctorId);
+        return ResponseEntity.ok(appointmentService.getPatientsOfDoctor(doctorId));
     }
 
     @GetMapping("/patients/{patientId}/appointments")
-    public Set<AppointmentDto> getAppointmentsOfGivenPatient(@RequestHeader("Authorization") String authorizationHeader, @PathVariable Long patientId) {
+    public ResponseEntity<Set<AppointmentDto>> getAppointmentsOfGivenPatient(@RequestHeader("Authorization") String authorizationHeader, @PathVariable Long patientId) {
         Long doctorId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
-        return appointmentService.getAppointmentsOfPatientsOfDoctor(doctorId, patientId);
+        return ResponseEntity.ok(appointmentService.getAppointmentsOfPatientsOfDoctor(doctorId, patientId));
     }
 }
