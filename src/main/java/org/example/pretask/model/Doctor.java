@@ -1,9 +1,13 @@
 package org.example.pretask.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Set;
 
+@Setter
+@Getter
 @Entity
 @DiscriminatorValue("doctor")
 public class Doctor extends ClinicUser {
@@ -12,27 +16,4 @@ public class Doctor extends ClinicUser {
     @OneToMany(mappedBy = "doctor")
     private Set<Appointment> appointments;
 
-    public Integer getAge() {
-        return age;
-    }
-
-    public void setAge(Integer age) {
-        this.age = age;
-    }
-
-    public String getSpecialization() {
-        return specialization;
-    }
-
-    public void setSpecialization(String specialization) {
-        this.specialization = specialization;
-    }
-
-    public Set<Appointment> getAppointments() {
-        return appointments;
-    }
-
-    public void setAppointments(Set<Appointment> appointments) {
-        this.appointments = appointments;
-    }
 }

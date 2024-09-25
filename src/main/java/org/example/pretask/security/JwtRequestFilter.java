@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.example.pretask.service.JwtTokenService;
 import org.example.pretask.service.JwtUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,16 +19,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final JwtUserDetailsService userDetailsService;
     private final JwtTokenService jwtTokenService;
-
-    @Autowired
-    public JwtRequestFilter(JwtUserDetailsService userDetailsService, JwtTokenService jwtTokenService) {
-        this.userDetailsService = userDetailsService;
-        this.jwtTokenService = jwtTokenService;
-    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)

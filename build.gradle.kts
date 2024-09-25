@@ -17,6 +17,12 @@ repositories {
     mavenCentral()
 }
 
+ext {
+    val mapstructVersion = "1.6.0"
+    var lombokVersion = "1.18.30"
+    var lombokMapstructBindingVersion = "0.2.0"
+}
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
@@ -31,11 +37,14 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    implementation("org.mapstruct:mapstruct:1.6.0")
-    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.0")
     runtimeOnly("org.flywaydb:flyway-database-postgresql:10.17.3")
     implementation("org.springframework.boot:spring-boot-starter-validation:3.3.3")
     implementation("io.jsonwebtoken:jjwt:0.12.6")
+    implementation("org.mapstruct:mapstruct:1.6.0")
+    implementation("org.projectlombok:lombok:1.18.30")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.0")
+    annotationProcessor("org.projectlombok:lombok:1.18.30")
+    annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
 }
 
 tasks.withType<Test> {

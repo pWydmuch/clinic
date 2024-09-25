@@ -1,6 +1,7 @@
 package org.example.pretask.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.example.pretask.dto.AppointmentDto;
 import org.example.pretask.dto.DoctorRegistrationRequest;
 import org.example.pretask.dto.PatientDto;
@@ -15,17 +16,12 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/doctors")
+@RequiredArgsConstructor
 public class DoctorController {
 
     private final AppointmentService appointmentService;
     private final DoctorService doctorService;
     private final JwtTokenService jwtTokenService;
-
-    public DoctorController(AppointmentService appointmentService, DoctorService doctorService, JwtTokenService jwtTokenService) {
-        this.appointmentService = appointmentService;
-        this.doctorService = doctorService;
-        this.jwtTokenService = jwtTokenService;
-    }
 
     @PostMapping("/registration")
     @ResponseStatus(HttpStatus.CREATED)

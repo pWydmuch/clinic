@@ -1,5 +1,6 @@
 package org.example.pretask.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.example.pretask.dto.LoginRequest;
 import org.example.pretask.dto.LoginResponse;
 import org.example.pretask.service.JwtUserDetailsService;
@@ -8,13 +9,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
 public class ClinicUserController {
 
     private final JwtUserDetailsService userDetailsService;
-
-    public ClinicUserController(JwtUserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
 
     @PostMapping("/login")
     public LoginResponse login(@RequestBody LoginRequest request) {

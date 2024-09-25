@@ -1,6 +1,7 @@
 package org.example.pretask.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.example.pretask.dto.AppointmentRequest;
 import org.example.pretask.dto.PatientRegistrationRequest;
 import org.example.pretask.service.AppointmentService;
@@ -11,20 +12,12 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/patients")
+@RequiredArgsConstructor
 public class PatientController {
 
     private final AppointmentService appointmentService;
     private final PatientService patientService;
-
     private final JwtTokenService jwtTokenService;
-
-    public PatientController(AppointmentService appointmentService,
-                             PatientService patientService,
-                             JwtTokenService jwtTokenService) {
-        this.appointmentService = appointmentService;
-        this.patientService = patientService;
-        this.jwtTokenService = jwtTokenService;
-    }
 
     @PostMapping("/appointments")
     @ResponseStatus(HttpStatus.CREATED)

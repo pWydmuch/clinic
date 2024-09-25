@@ -1,5 +1,6 @@
 package org.example.pretask.service;
 
+import lombok.RequiredArgsConstructor;
 import org.example.pretask.dto.AppointmentDto;
 import org.example.pretask.dto.PatientDto;
 import org.example.pretask.exception.AppointmentAlreadyCancelledException;
@@ -20,20 +21,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class AppointmentService {
+
     private final AppointmentRepository appointmentRepository;
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
     private final PatientDtoMapper patientDtoMapper;
     private final AppointmentDtoMapper appointmentDtoMapper;
-
-    public AppointmentService(AppointmentRepository appointmentRepository, DoctorRepository doctorRepository, PatientRepository patientRepository, PatientDtoMapper patientDtoMapper, AppointmentDtoMapper appointmentDtoMapper) {
-        this.appointmentRepository = appointmentRepository;
-        this.doctorRepository = doctorRepository;
-        this.patientRepository = patientRepository;
-        this.patientDtoMapper = patientDtoMapper;
-        this.appointmentDtoMapper = appointmentDtoMapper;
-    }
 
     public Long createAppointment(Long doctorId, Long patientId, LocalDateTime date) {
         Appointment appointment = new Appointment();
