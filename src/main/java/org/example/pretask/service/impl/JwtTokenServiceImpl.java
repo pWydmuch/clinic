@@ -1,6 +1,7 @@
 package org.example.pretask.service.impl;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.time.Clock;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,8 +22,13 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
     public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60 * 1000; //5 hours in milliseconds
 
-    @Value("${jwt.secret}")
-    private String secret;
+    private final String secret;
+    private final Clock clock;
+
+    public JwtTokenServiceImpl(@Value("${jwt.secret}") String secret, Clock clock) {
+        this.secret = secret;
+        this.clock = clock;
+    }
 
     @Override
     public String generateToken(UserDetails userDetails, Long id) {
@@ -31,16 +38,20 @@ public class JwtTokenServiceImpl implements JwtTokenService {
                 .claims(claims)
                 .subject(subject)
                 .id(id.toString())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
+                .issuedAt(new Date(clock.millis()))
+                .expiration(new Date(clock.millis() + JWT_TOKEN_VALIDITY))
                 .signWith(getSignInKey())
                 .compact();
     }
 
     @Override
     public Boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = getUsernameFromToken(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        try {
+            final String username = getUsernameFromToken(token);
+            return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        } catch (ExpiredJwtException e) {
+            return false;
+        }
     }
 
     @Override
@@ -55,7 +66,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
     private Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
-        return expiration.before(new Date());
+        return expiration.before(new Date(clock.millis()));
     }
 
     private Date getExpirationDateFromToken(String token) {
@@ -70,6 +81,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     private Claims getAllClaimsFromToken(String token) {
         return Jwts.parser()
                 .verifyWith(getSignInKey())
+                .clock(() -> new Date(clock.millis()))
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
