@@ -6,13 +6,14 @@ import org.example.pretask.service.JwtUserDetailsService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.util.Collections;
 
 @Service
 public class JwtUserDetailsServiceImpl implements JwtUserDetailsService {
@@ -38,7 +39,11 @@ public class JwtUserDetailsServiceImpl implements JwtUserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String login) {
         ClinicUser clinicUser = getClinicUser(login);
-        return new User(clinicUser.getLogin(), clinicUser.getPassword(), new ArrayList<>());
+        return new User(
+            clinicUser.getLogin(),
+            clinicUser.getPassword(),
+            Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + clinicUser.getRole().toUpperCase()))
+        );
     }
 
     private ClinicUser getClinicUser(String login) {

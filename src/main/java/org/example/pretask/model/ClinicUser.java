@@ -16,10 +16,14 @@ public class ClinicUser {
     private Long id;
     private String name;
     private String surname;
+    private Integer age;
     @Column(unique = true)
     private Long pesel;
     @Column(unique = true)
     private String login;
     private String password;
 
+    public String getRole() {
+        return this.getClass().getAnnotation(DiscriminatorValue.class).value();
+    }
 }

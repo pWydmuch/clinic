@@ -9,6 +9,7 @@ import org.example.pretask.service.JwtTokenService;
 import org.example.pretask.service.PatientService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,6 +21,7 @@ public class PatientController {
     private final PatientService patientService;
     private final JwtTokenService jwtTokenService;
 
+    @PreAuthorize("hasRole('PATIENT')")
     @PostMapping("/appointments")
     public ResponseEntity<Long> addAppointment(@RequestBody AppointmentRequest request, @RequestHeader("Authorization") String authorizationHeader) {
         Long patientId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
@@ -27,6 +29,7 @@ public class PatientController {
         return new ResponseEntity<>(appointmentId, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/appointments/{appointmentId}/cancellation")
     public ResponseEntity<Void> cancelAppointment(@PathVariable Long appointmentId, @RequestHeader("Authorization") String authorizationHeader) {
         Long patientId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
@@ -38,6 +41,12 @@ public class PatientController {
     public ResponseEntity<Void> register(@RequestBody @Valid PatientRegistrationRequest registrationRequest) {
         patientService.registerNewPatient(registrationRequest);
         return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+    @PreAuthorize("hasRole('PATIENT')")
+    @GetMapping("/roletest")
+    public ResponseEntity<String> test(@RequestHeader("Authorization") String authorizationHeader) {
+        Long doctorId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
+        return ResponseEntity.ok("granted access " + doctorId);
     }
 
 }

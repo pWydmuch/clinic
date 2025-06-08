@@ -1,6 +1,7 @@
 package org.example.pretask.security;
 
 import lombok.RequiredArgsConstructor;
+import org.example.pretask.service.impl.JwtUserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -31,21 +32,6 @@ public class SecurityConfig {
     private final JwtRequestFilter jwtRequestFilter;
 
     @Bean
-    @Order(1)
-    public SecurityFilterChain basicAuthChain(HttpSecurity http) throws Exception {
-        return http
-                .securityMatcher("/basic/**")
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .build();
-    }
-
-    @Bean
-    @Order(2)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(authRequests -> authRequests
@@ -60,32 +46,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails user = User.builder()
-                .username("user")
-                .password(passwordEncoder().encode("user123"))
-                .roles("USER")
-                .build();
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password(passwordEncoder().encode("admin123"))
-                .roles("ADMIN")
-                .build();
-        return new InMemoryUserDetailsManager(user, admin);
-    }
-
-    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    //Without it there's SOE
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService());
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
     }
 
     @Bean

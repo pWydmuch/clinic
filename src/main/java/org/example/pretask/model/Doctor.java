@@ -11,7 +11,7 @@ import java.util.Set;
 @Entity
 @DiscriminatorValue("doctor")
 public class Doctor extends ClinicUser {
-    private Integer age;
+
     private String specialization;
     @OneToMany(mappedBy = "doctor")
     private Set<Appointment> appointments;

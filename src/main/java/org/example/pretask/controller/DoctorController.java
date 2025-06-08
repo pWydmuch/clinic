@@ -10,6 +10,7 @@ import org.example.pretask.service.DoctorService;
 import org.example.pretask.service.JwtTokenService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
@@ -29,6 +30,7 @@ public class DoctorController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('DOCTOR')")
     @PutMapping("/appointments/{appointmentId}/cancellation")
     public ResponseEntity<Void> cancelAppointment(@PathVariable Long appointmentId, @RequestHeader("Authorization") String authorizationHeader) {
         Long doctorId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
@@ -36,15 +38,24 @@ public class DoctorController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('DOCTOR')")
     @GetMapping("/patients")
     public ResponseEntity<Set<PatientDto>> getPatientsWithAppointmentsWithDoctor(@RequestHeader("Authorization") String authorizationHeader) {
         Long doctorId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
         return ResponseEntity.ok(appointmentService.getPatientsOfDoctor(doctorId));
     }
 
+    @PreAuthorize("hasRole('DOCTOR')")
     @GetMapping("/patients/{patientId}/appointments")
     public ResponseEntity<Set<AppointmentDto>> getAppointmentsOfGivenPatient(@RequestHeader("Authorization") String authorizationHeader, @PathVariable Long patientId) {
         Long doctorId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
         return ResponseEntity.ok(appointmentService.getAppointmentsOfPatientsOfDoctor(doctorId, patientId));
+    }
+
+    @PreAuthorize("hasRole('DOCTOR')")
+    @GetMapping("/roletest")
+    public ResponseEntity<String> test(@RequestHeader("Authorization") String authorizationHeader) {
+        Long doctorId = jwtTokenService.getIdFromToken(authorizationHeader.replace("Bearer ", ""));
+        return ResponseEntity.ok("granted access " + doctorId);
     }
 }
